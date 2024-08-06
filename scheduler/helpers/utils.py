@@ -5,6 +5,7 @@ Helper functions for the scheduler
 import logging
 from datetime import datetime
 from pathlib import Path
+import platform
 
 from rich.console import Console
 from rich.progress import (
@@ -23,6 +24,14 @@ from scheduler.helpers.config import config
 _console = Console(color_system="standard")
 
 logger = logging.getLogger(__name__)
+
+
+class HostnameFilter(logging.Filter):
+    hostname = platform.node()
+
+    def filter(self, record):
+        record.hostname = HostnameFilter.hostname
+        return True
 
 
 def get_progress_bar(transient: bool = False) -> Progress:
@@ -85,6 +94,8 @@ def configure_logging(config_file: Path, module_name: str, logger: logging.Logge
 
     file_handler = logging.FileHandler(log_file, mode="a")
     file_handler.setLevel(logging.DEBUG)
+    file_handler.addFilter(HostnameFilter())
+
     file_handler.setFormatter(
         logging.Formatter(
             "%(asctime)s  - %(process)d @ %(hostname)s - \
