@@ -148,10 +148,12 @@ def execute_job(
             logger.error(f"{key}={value}")
         logger.error("=====================================")
         logger.error("stdout:")
-        logger.error(result.stdout.decode("utf-8"))
+        with stdout.open("r") as f:
+            logger.error(f.read())
         logger.error("=====================================")
         logger.error("stderr:")
-        logger.error(result.stderr.decode("utf-8"))
+        with stderr.open("r") as f:
+            logger.error(f.read())
         logger.error("=====================================")
         logger.error("Exit code: %s", str(result.returncode))
         logger.error("=====================================")
