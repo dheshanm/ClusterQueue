@@ -117,8 +117,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Run fmriprep on a single subject/session pair"
     )
-    parser.add_argument("subject_id", type=str, help="The subject ID")
-    parser.add_argument("session_id", type=str, help="The session ID")
+    parser.add_argument("subject_id", type=str, help="The subject ID. e.g. sub-XXXXXXX")
+    parser.add_argument("session_id", type=str, help="The session ID. e.g. ses-XXXXXXX")
 
     args = parser.parse_args()
 
@@ -177,11 +177,15 @@ if __name__ == "__main__":
 {SINGULARITY_IMGAGE_PATH} \
 /data /out participant \
 -w /work --participant-label {subject_id} \
+--nprocs 8 --mem 32G --omp-nthreads 8 \
 --fs-subjects-dir /fsdir \
+--fs-no-resume \
 --output-layout bids \
 --verbose \
 --skip_bids_validation \
 --notrack \
+--cifti-output \
+--level minimal \
 --bids-filter-file /filter.json
 """
 
