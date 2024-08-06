@@ -87,7 +87,8 @@ def configure_logging(config_file: Path, module_name: str, logger: logging.Logge
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(
         logging.Formatter(
-            "%(asctime)s  - %(process)d - %(name)s - %(levelname)s - %(message)s - [%(filename)s:%(lineno)d]"
+            "%(asctime)s  - %(process)d @ %(hostname)s - \
+%(name)s - %(levelname)s - %(message)s - [%(filename)s:%(lineno)d]"
         )
     )
 
