@@ -223,9 +223,9 @@ if __name__ == "__main__":
 -B {rawdata_dir}:/data:ro \
 -B {work_dir}:/work \
 -B {fmriprep_outdir_root}:/out \
--B {fs_outdir_root}:/fsdir \
+-B {fs_session_temp}:/fsdir \
 -B /data/pnl/soft/pnlpipe3/freesurfer/license.txt:/opt/freesurfer/license.txt \
--B {fs_session_temp}/filter.json:/filter.json \
+-B {fmriprep_outdir_root}/filter.json:/filter.json \
 {SINGULARITY_IMGAGE_PATH} \
 /data /out participant \
 -w /work --participant-label {subject_id} \
