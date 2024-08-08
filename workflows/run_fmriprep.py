@@ -33,6 +33,39 @@ OUT_ROOT = Path("/data/predict1/home/dm1447/fmriprep/output")
 TEMP_ROOT = Path("/tmp")
 
 
+def create_link(source: Path, destination: Path, softlink: bool = True) -> None:
+    """
+    Create a link from the source to the destination.
+
+    Note:
+    - Both source and destination must be on the same filesystem.
+    - The destination must not already exist.
+
+    Args:
+        source (Path): The source of the symbolic link.
+        destination (Path): The destination of the symbolic link.
+        softlink (bool, optional): Whether to create a soft link.
+            Defaults to True. If False, a hard link is created.
+
+    Returns:
+        None
+    """
+    if not source.exists():
+        logger.error(f"Source path does not exist: {source}")
+        raise FileNotFoundError
+
+    if destination.exists():
+        logger.error(f"Destination path already exists: {destination}")
+        raise FileExistsError
+
+    if softlink:
+        logger.debug(f"Creating soft link from {source} to {destination}")
+        destination.symlink_to(source)
+    else:
+        logger.debug(f"Creating hard link from {source} to {destination}")
+        destination.hardlink_to(source)
+
+
 # from:
 # qqc/qqc/fmriprep.py
 def remove_DataSetTrailingPadding_from_json_files(
@@ -124,8 +157,8 @@ if __name__ == "__main__":
 
     # subject_id = "sub-YA52868"
     # session_id = "ses-202404051"
-    subject_id = args.subject_id
-    session_id = args.session_id
+    subject_id: str = args.subject_id
+    session_id: str = args.session_id
 
     logger.info(f"Running fmriprep for {subject_id} {session_id}")
 
@@ -145,21 +178,40 @@ if __name__ == "__main__":
     rawdata_dir = MRI_ROOT / "rawdata"
     # fmriprep_outdir_root = MRI_ROOT / "derivatives" / "fmriprep"
     fmriprep_outdir_root = OUT_ROOT / subject_id / session_id
-    fs_outdir_root = MRI_ROOT / "derivatives" / "freesurfer"
+    fs_outdir_root = MRI_ROOT / "derivatives" / "freesurfer7_t2w"
+    fs_session_dir = fs_outdir_root / subject_id / session_id
+
+    # Link the freesurfer output to a temporary directory to prevent fmriprep from
+    # using information from the other sessions
+    fs_session_temp = TEMP_ROOT / "freesurfer_temp" / subject_id / session_id
+    fs_session_temp.mkdir(exist_ok=True, parents=True)
+
+    logger.info(f"Linking {fs_session_dir} to {fs_session_temp}")
+    create_link(
+        source=fs_session_dir,
+        destination=fs_session_temp,
+        softlink=True,
+    )
 
     fmriprep_outdir_root.mkdir(exist_ok=True, parents=True)
 
     remove_DataSetTrailingPadding_from_json_files(rawdata_dir, subject_id, session_id)
 
+    session_id_digits = session_id.split("-")[1]
     filter_dict = {
         "t1w": {
             "datatype": "anat",
-            "session": session_id.split("-")[1],
+            "session": session_id_digits,
             "suffix": "T1w",
+        },
+        "t2w": {
+            "datatype": "anat",
+            "session": session_id_digits,
+            "suffix": "T2w",
         },
         "bold": {
             "datatype": "func",
-            "session": session_id.split("-")[1],
+            "session": session_id_digits,
             "suffix": "bold",
         },
     }
@@ -173,7 +225,7 @@ if __name__ == "__main__":
 -B {fmriprep_outdir_root}:/out \
 -B {fs_outdir_root}:/fsdir \
 -B /data/pnl/soft/pnlpipe3/freesurfer/license.txt:/opt/freesurfer/license.txt \
--B {fmriprep_outdir_root}/filter.json:/filter.json \
+-B {fs_session_temp}/filter.json:/filter.json \
 {SINGULARITY_IMGAGE_PATH} \
 /data /out participant \
 -w /work --participant-label {subject_id} \
@@ -198,6 +250,9 @@ if __name__ == "__main__":
 
     stdout.close()
     stderr.close()
+
+    # Remove the temporary freesurfer directory
+    shutil.rmtree(fs_session_temp)
 
     logger.info(f"{subject_id} {session_id} finished")
     sys.exit(0)
