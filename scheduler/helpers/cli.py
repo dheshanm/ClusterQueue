@@ -132,7 +132,7 @@ def execute_job(
     result = subprocess.run(
         payload,
         stdout=stdout.open("a"),
-        stderr=stderr.open("a"),
+        stderr=stderr.open("w"),
         cwd=cwd,
         env=env,
         shell=True,
