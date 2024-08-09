@@ -151,7 +151,7 @@ class Job(BaseModel):
             FROM public.jobs
             WHERE job_status = 'PENDING'
             AND job_tags IS NULL
-            ORDER BY job_submission_time
+            ORDER BY RANDOM()
             LIMIT {limit};
         """
         else:
