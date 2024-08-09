@@ -252,6 +252,7 @@ if __name__ == "__main__":
     stderr.close()
 
     # Remove the temporary freesurfer directory
+    logger.info(f"Removing {fs_session_temp}")
     shutil.rmtree(fs_session_temp)
 
     logger.info(f"{subject_id} {session_id} finished")
