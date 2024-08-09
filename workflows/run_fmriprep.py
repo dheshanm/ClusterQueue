@@ -10,6 +10,7 @@ import logging
 import shutil
 import subprocess
 import sys
+import random
 from pathlib import Path
 from typing import IO, Callable
 import argparse
@@ -184,11 +185,12 @@ if __name__ == "__main__":
     # Link the freesurfer output to a temporary directory to prevent fmriprep from
     # using information from the other sessions
     fs_session_temp = TEMP_ROOT / "freesurfer_temp" / subject_id / session_id
-    fs_session_temp.parent.mkdir(exist_ok=True, parents=True)
 
-    if fs_session_temp.exists():
-        logger.info(f"Removing {fs_session_temp}")
-        shutil.rmtree(fs_session_temp)
+    # isolate the freesurfer output per run
+    random_str = "".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=6))
+    fs_session_temp = fs_session_temp / random_str
+
+    fs_session_temp.parent.mkdir(exist_ok=True, parents=True)
 
     logger.info(f"Linking {fs_session_dir} to {fs_session_temp}")
     create_link(
