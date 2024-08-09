@@ -188,8 +188,8 @@ if __name__ == "__main__":
             pool.map(processor, params)
         except KeyboardInterrupt:
             logger.info("Exiting...")
-            orchestrator.update_node(
-                hostname=HOSTNAME, tags=TAGS, config_file=config_file, status="stopped"
+            orchestrator.stop_node(
+                hostname=HOSTNAME, config_file=config_file
             )
 
     logger.info("Done!")

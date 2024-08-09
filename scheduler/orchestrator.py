@@ -369,3 +369,41 @@ def handle_job(config_file: Path, job: Job) -> None:
         silent=True,
         show_commands=False,
     )
+
+
+def stop_node(hostname: str, config_file: Path) -> None:
+    """
+    Stops a compute node.
+
+    Args:
+        hostname (str): The hostname of the compute node.
+        config_file (str): The path to the configuration file.
+
+    Returns:
+        None
+    """
+    queries: List[str] = []
+
+    stop_node_query = f"""
+    UPDATE nodes
+    SET node_status = 'STOPPED',
+        node_last_seen = '{datetime.now()}'
+    WHERE node_hostname = '{hostname}'
+    """
+
+    interrupt_jobs_query = f"""
+    UPDATE jobs
+    SET job_status = 'INTERRUPTED',
+        job_last_updated = '{datetime.now()}'
+    WHERE job_assigned_node = '{hostname}'
+    """
+
+    queries.append(stop_node_query)
+    queries.append(interrupt_jobs_query)
+
+    db.execute_queries(
+        config_file=config_file,
+        queries=queries,
+        silent=True,
+        show_commands=False,
+    )
