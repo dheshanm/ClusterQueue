@@ -13,6 +13,7 @@ import sys
 import random
 from pathlib import Path
 from typing import IO, Callable
+from datetime import datetime
 import argparse
 
 logger = logging.getLogger("fmriprep")
@@ -26,9 +27,13 @@ logging.basicConfig(**logargs)
 SINGULARITY_IMGAGE_PATH = (
     "/data/predict1/home/kcho/singularity_images/fmriprep-24.0.0.simg"
 )
-LOGS_DIR = "/data/predict1/home/dm1447/fmriprep/logs"
+LOGS_DIR = Path("/data/predict1/home/dm1447/fmriprep/logs")
 MRI_ROOT = Path("/data/predict1/data_from_nda/MRI_ROOT")
 OUT_ROOT = Path("/data/predict1/data_from_nda/MRI_ROOT/derivatives/fmriprep_24_0_0")
+
+SINGULARITY_FALLBACK_PATH = (
+    "/apps/released/gcc-toolchain/gcc-4.x/singularity/singularity-3.7.0/bin/singularity"
+)
 
 # local
 TEMP_ROOT = Path("/tmp")
@@ -170,7 +175,7 @@ if __name__ == "__main__":
     SINGULARITY_EXEC = shutil.which("singularity")
     if SINGULARITY_EXEC is None:
         # Try looking at the default location
-        SINGULARITY_EXEC = "/apps/released/gcc-toolchain/gcc-4.x/singularity/singularity-3.7.0/bin/singularity"
+        SINGULARITY_EXEC = SINGULARITY_FALLBACK_PATH
         if Path(SINGULARITY_EXEC).exists() is False:
             logger.error("Singularity not found")
             sys.exit(404)
@@ -246,8 +251,15 @@ if __name__ == "__main__":
 --bids-filter-file /filter.json
 """
 
-    stdout = open(f"{LOGS_DIR}/{subject_id}_{session_id}.stdout", "w", encoding="utf-8")
-    stderr = open(f"{LOGS_DIR}/{subject_id}_{session_id}.stderr", "w", encoding="utf-8")
+    stdout_path = (
+        LOGS_DIR / f"{subject_id}_{session_id}_{datetime.now().isoformat()}_stdout.log"
+    )
+    stderr_path = (
+        LOGS_DIR / f"{subject_id}_{session_id}_{datetime.now().isoformat()}_stderr.log"
+    )
+
+    stdout = open(stdout_path, "w", encoding="utf-8")
+    stderr = open(stderr_path, "w", encoding="utf-8")
 
     logger.debug(f"Logging stdout to {stdout}")
 
@@ -260,8 +272,11 @@ if __name__ == "__main__":
 
     output_dir = OUT_ROOT / subject_id / session_id
     output_dir.mkdir(exist_ok=True, parents=True)
-    logger.info(f"Movinf assets from {fmriprep_outdir_root} to {output_dir}")
+    logger.info(f"Moving assets from {fmriprep_outdir_root} to {output_dir}")
     shutil.move(fmriprep_outdir_root, output_dir)
+    # copy logs to the output directory
+    shutil.copy(stdout_path, output_dir)
+    shutil.copy(stderr_path, output_dir)
 
     logger.info(f"Removing temporary directory {TEMP_DIR}")
     shutil.rmtree(TEMP_DIR)
