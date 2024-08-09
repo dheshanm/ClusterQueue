@@ -28,7 +28,7 @@ SINGULARITY_IMGAGE_PATH = (
 )
 LOGS_DIR = "/data/predict1/home/dm1447/fmriprep/logs"
 MRI_ROOT = Path("/data/predict1/data_from_nda/MRI_ROOT")
-OUT_ROOT = Path("/data/predict1/home/dm1447/fmriprep/output")
+OUT_ROOT = Path("/data/predict1/data_from_nda/MRI_ROOT/derivatives/fmriprep_24_0_0")
 
 # local
 TEMP_ROOT = Path("/tmp")
@@ -163,6 +163,10 @@ if __name__ == "__main__":
 
     logger.info(f"Running fmriprep for {subject_id} {session_id}")
 
+    TEMP_DIR = TEMP_ROOT / "fmriprep"
+    RANDOM_STR = "".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=6))
+    TEMP_DIR = TEMP_DIR / RANDOM_STR
+
     SINGULARITY_EXEC = shutil.which("singularity")
     if SINGULARITY_EXEC is None:
         # Try looking at the default location
@@ -173,23 +177,18 @@ if __name__ == "__main__":
 
     logger.info(f"Singularity executable: {SINGULARITY_EXEC}")
 
-    work_dir = TEMP_ROOT / "fmriprep" / subject_id / session_id
+    work_dir = TEMP_DIR / "work"
     work_dir.mkdir(exist_ok=True, parents=True)
 
     rawdata_dir = MRI_ROOT / "rawdata"
     # fmriprep_outdir_root = MRI_ROOT / "derivatives" / "fmriprep"
-    fmriprep_outdir_root = OUT_ROOT / subject_id / session_id
+    fmriprep_outdir_root = TEMP_DIR / "output"
     fs_outdir_root = MRI_ROOT / "derivatives" / "freesurfer7_t2w"
     fs_session_dir = fs_outdir_root / subject_id / session_id
 
     # Link the freesurfer output to a temporary directory to prevent fmriprep from
     # using information from the other sessions
-    fs_session_temp = TEMP_ROOT / "freesurfer_temp" / subject_id / session_id
-
-    # isolate the freesurfer output per run
-    random_str = "".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=6))
-    fs_session_temp = fs_session_temp / random_str
-
+    fs_session_temp = TEMP_DIR / "fsdir"
     fs_session_temp.parent.mkdir(exist_ok=True, parents=True)
 
     logger.info(f"Linking {fs_session_dir} to {fs_session_temp}")
@@ -257,9 +256,15 @@ if __name__ == "__main__":
     stdout.close()
     stderr.close()
 
-    # Remove the temporary freesurfer directory
-    logger.info(f"Removing {fs_session_temp}")
-    shutil.rmtree(fs_session_temp)
+    logger.info(f"Finished fmriprep for {subject_id} {session_id}")
+
+    output_dir = OUT_ROOT / subject_id / session_id
+    output_dir.mkdir(exist_ok=True, parents=True)
+    logger.info(f"Movinf assets from {fmriprep_outdir_root} to {output_dir}")
+    shutil.move(fmriprep_outdir_root, output_dir)
+
+    logger.info(f"Removing temporary directory {TEMP_DIR}")
+    shutil.rmtree(TEMP_DIR)
 
     logger.info(f"{subject_id} {session_id} finished")
     sys.exit(0)
