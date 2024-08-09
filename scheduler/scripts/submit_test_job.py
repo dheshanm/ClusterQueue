@@ -22,6 +22,7 @@ except ValueError:
 
 import logging
 from datetime import datetime
+import random
 
 from rich.logging import RichHandler
 
@@ -53,13 +54,17 @@ if __name__ == "__main__":
     console.rule(f"[bold red]{MODULE_NAME}")
     logger.info(f"Using config file: {config_file}")
 
+    # generate random string of length 10, containing letters and digits
+    random_string = "".join(random.choices("abcdefghijklmnopqrstuvwxyz0123456789", k=10))
+
     env_vars = {
-        "TEST_VAR_1": "Hello World",
-        "TEST_VAR_2": "Hello World 2",
+        "TEST_VAR_1": "Hello",
+        "TEST_VAR_2": "World",
+        "TEST_VAR_3": random_string,
     }
 
     new_job = Job(
-        job_payload="echo $TEST_VAR_1, $TEST_VAR_2",
+        job_payload="echo $TEST_VAR_1 $TEST_VAR_2 : $TEST_VAR_3",
         job_env_variables=env_vars,
         job_status="PENDING",
         job_last_updated=datetime.now(),
