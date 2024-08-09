@@ -303,6 +303,8 @@ def handle_job(config_file: Path, job: Job) -> None:
     log_stdout = logs_root / f"job_{job.job_id}_stdout.log"
     log_stderr = logs_root / f"job_{job.job_id}_stderr.log"
 
+    start_timestamp = datetime.now()
+
     with open(log_stdout, "w", encoding="utf-8") as f:
         f.write("-" * 80)
         f.write("\n")
@@ -310,7 +312,7 @@ def handle_job(config_file: Path, job: Job) -> None:
         f.write(f"Job Payload: {job.job_payload}\n")
         f.write(f"Job Tags: {job.job_tags}\n")
         f.write(f"Job Submission Time: {job.job_submission_time}\n")
-        f.write(f"Job Started at: {datetime.now()}\n")
+        f.write(f"Job Started at: {start_timestamp}\n")
         f.write(f"Job Metadata: {job_metadata}\n")
         f.write("+" * 80)
         f.write("\n")
@@ -335,13 +337,20 @@ def handle_job(config_file: Path, job: Job) -> None:
     result_metadata = {}
     result_metadata["returncode"] = result.returncode
 
+    end_timestamp = datetime.now()
+    duration = end_timestamp - start_timestamp
+
+    result_metadata["start_timestamp"] = start_timestamp
+    result_metadata["end_timestamp"] = end_timestamp
+    result_metadata["duration_s"] = duration.total_seconds()
+
     result_metadata_str = db.sanitize_json(result_metadata)
 
     with open(log_stdout, "a", encoding="utf-8") as f:
         f.write("+" * 80)
         f.write("\n")
         f.write(f"Job Result Metadata: {result_metadata}\n")
-        f.write(f"Job Completed at: {datetime.now()}\n")
+        f.write(f"Job Completed at: {end_timestamp}\n")
         f.write("-" * 80)
         f.write("\n")
 
