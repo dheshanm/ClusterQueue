@@ -186,6 +186,10 @@ if __name__ == "__main__":
     fs_session_temp = TEMP_ROOT / "freesurfer_temp" / subject_id / session_id
     fs_session_temp.parent.mkdir(exist_ok=True, parents=True)
 
+    if fs_session_temp.exists():
+        logger.info(f"Removing {fs_session_temp}")
+        shutil.rmtree(fs_session_temp)
+
     logger.info(f"Linking {fs_session_dir} to {fs_session_temp}")
     create_link(
         source=fs_session_dir,
