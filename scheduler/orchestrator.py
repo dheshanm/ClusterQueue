@@ -10,16 +10,19 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
+import pandas as pd
+
 from scheduler.helpers import cli, db
 from scheduler.helpers.config import config
 from scheduler.models.job import Job
 from scheduler.models.node import Node
+from scheduler.models.processor import Processor
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-def snooze(config_file: Path) -> None:
+def snooze(config_file: Path, interruptible: bool = True) -> None:
     """
     Sleeps for a specified amount of time.
 
@@ -48,14 +51,44 @@ def snooze(config_file: Path) -> None:
     try:
         time.sleep(snooze_time_seconds)
     except KeyboardInterrupt:
-        try:
-            logger.info("[bold red]Snooze interrupted by user.", extra={"markup": True})
-            logger.info("[red]Interrupt again to exit.", extra={"markup": True})
-            time.sleep(5)
-        except KeyboardInterrupt:
-            logger.info("[bold red]Exiting...", extra={"markup": True})
+        if not interruptible:
+            logger.info(
+                "KeyboardInterrupt received. Aborting...", extra={"markup": True}
+            )
             sys.exit(0)
-        logger.info("[bold green]Resuming...", extra={"markup": True})
+        else:
+            try:
+                logger.info(
+                    "[bold red]Snooze interrupted by user.", extra={"markup": True}
+                )
+                logger.info("[red]Interrupt again to exit.", extra={"markup": True})
+                time.sleep(5)
+            except KeyboardInterrupt:
+                logger.info("[bold red]Exiting...", extra={"markup": True})
+                sys.exit(0)
+            logger.info("[bold green]Resuming...", extra={"markup": True})
+
+
+def update_node_last_seen(hostname: str, config_file: Path) -> None:
+    """
+    Updates the last seen time of the compute node.
+
+    Args:
+        hostname (str): The hostname of the compute node.
+        config_file (str): The path to the configuration file.
+
+    Returns:
+        None
+    """
+
+    query = Node.update_last_seen_query(hostname)
+
+    db.execute_queries(
+        config_file=config_file,
+        queries=[query],
+        silent=True,
+        show_commands=False,
+    )
 
 
 def update_node(hostname: str, config_file: Path, status: str, tags: List[str]) -> None:
@@ -88,6 +121,41 @@ def update_node(hostname: str, config_file: Path, status: str, tags: List[str]) 
     )
 
 
+def update_node_processor(
+    hostname: str, processor_idx: int, config_file: Path, status: str
+) -> None:
+    """
+    Registers the compute node with the scheduler.
+
+    Args:
+        hostname (str): The hostname of the compute node.
+        config_file (str): The path to the configuration file.
+        status (str): The status of the compute node.
+
+    Returns:
+        None
+    """
+
+    processor = Processor(
+        processor_parent_node=hostname,
+        processor_id=processor_idx,
+        processor_status=status,
+        processor_last_seen=datetime.now(),
+    )
+
+    query = processor.insert_query()
+
+    db.execute_queries(
+        config_file=config_file,
+        queries=[query],
+        silent=True,
+        show_commands=False,
+    )
+
+    # Update the last seen time of the compute node
+    update_node_last_seen(hostname, config_file)
+
+
 def get_pending_jobs(
     config_file: Path, tags: List[str], limit: int = 10
 ) -> Optional[List[Job]]:
@@ -114,7 +182,9 @@ def get_pending_jobs(
     return available_jobs
 
 
-def claim_job(hostname: str, job_id: int, config_file: Path) -> bool:
+def claim_job(
+    hostname: str, processor_idx: int, job_id: int, config_file: Path
+) -> bool:
     """
     Claims a job for a compute node.
 
@@ -129,6 +199,7 @@ def claim_job(hostname: str, job_id: int, config_file: Path) -> bool:
     query = f"""
     UPDATE jobs
     SET job_assigned_node = '{hostname}',
+        job_assigned_node_processor = {processor_idx},
         job_status = 'CLAIMED',
         job_last_updated = '{datetime.now()}'
     WHERE job_id = {job_id} AND job_status = 'PENDING'
@@ -144,20 +215,54 @@ def claim_job(hostname: str, job_id: int, config_file: Path) -> bool:
     # check if the job was claimed
 
     query = f"""
-    SELECT job_assigned_node
+    SELECT job_assigned_node, job_assigned_node_processor
     FROM jobs
     WHERE job_id = {job_id}
     """
 
-    result = db.fetch_record(
+    result: pd.DataFrame = db.execute_sql(
         config_file=config_file,
         query=query,
     )
 
-    if result == hostname:
+    if result.empty:
+        return False
+
+    if (
+        result["job_assigned_node"].iloc[0] == hostname
+        and result["job_assigned_node_processor"].iloc[0] == processor_idx
+    ):
         return True
 
     return False
+
+
+def update_job_status(job_id: int, status: str, config_file: Path) -> None:
+    """
+    Updates the status of a job.
+
+    Args:
+        job_id (int): The ID of the job.
+        status (str): The new status of the job.
+        config_file (str): The path to the configuration file.
+
+    Returns:
+        None
+    """
+
+    query = f"""
+    UPDATE jobs
+    SET job_status = '{status}',
+        job_last_updated = '{datetime.now()}'
+    WHERE job_id = {job_id}
+    """
+
+    db.execute_queries(
+        config_file=config_file,
+        queries=[query],
+        silent=True,
+        show_commands=False,
+    )
 
 
 def handle_job(config_file: Path, job: Job) -> None:
@@ -198,6 +303,18 @@ def handle_job(config_file: Path, job: Job) -> None:
     log_stdout = logs_root / f"job_{job.job_id}_stdout.log"
     log_stderr = logs_root / f"job_{job.job_id}_stderr.log"
 
+    with open(log_stdout, "w", encoding="utf-8") as f:
+        f.write("-" * 80)
+        f.write("\n")
+        f.write(f"Job ID: {job.job_id}\n")
+        f.write(f"Job Payload: {job.job_payload}\n")
+        f.write(f"Job Tags: {job.job_tags}\n")
+        f.write(f"Job Submission Time: {job.job_submission_time}\n")
+        f.write(f"Job Started at: {datetime.now()}\n")
+        f.write(f"Job Metadata: {job_metadata}\n")
+        f.write("+" * 80)
+        f.write("\n")
+
     if "CWD" in job_metadata:
         cwd = Path(job_metadata["CWD"])
     else:
@@ -219,6 +336,14 @@ def handle_job(config_file: Path, job: Job) -> None:
     result_metadata["returncode"] = result.returncode
 
     result_metadata_str = db.sanitize_json(result_metadata)
+
+    with open(log_stdout, "a", encoding="utf-8") as f:
+        f.write("+" * 80)
+        f.write("\n")
+        f.write(f"Job Result Metadata: {result_metadata}\n")
+        f.write(f"Job Completed at: {datetime.now()}\n")
+        f.write("-" * 80)
+        f.write("\n")
 
     # Update the job status to COMPLETED
     query = f"""

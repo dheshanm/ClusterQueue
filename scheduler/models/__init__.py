@@ -5,9 +5,10 @@ Models Database tables, and contains functions to initialize the database.
 from pathlib import Path
 from typing import List, Union
 
-from scheduler.models.node import Node
-from scheduler.models.job import Job
 from scheduler.helpers import db
+from scheduler.models.job import Job
+from scheduler.models.node import Node
+from scheduler.models.processor import Processor
 
 
 def flatten_list(coll: list) -> list:
@@ -41,11 +42,13 @@ def init_db(config_file: Path):
     """
     drop_queries_l: List[Union[str, List[str]]] = [
         Job.drop_table_query(),
+        Processor.drop_table_query(),
         Node.drop_table_query(),
     ]
 
     create_queries_l: List[Union[str, List[str]]] = [
         Node.init_table_query(),
+        Processor.init_table_query(),
         Job.init_table_query(),
     ]
 

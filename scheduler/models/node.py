@@ -22,6 +22,7 @@ class Node(BaseModel):
     hostname: str
     status: str
     tags: List[str]
+    num_parallel_jobs: int = 1
     last_seen: datetime
 
     def __str__(self):
@@ -40,13 +41,14 @@ class Node(BaseModel):
             node_hostname TEXT PRIMARY KEY,
             node_status TEXT NOT NULL,
             node_tags TEXT[],
+            node_num_parallel_jobs INTEGER,
             node_last_seen TIMESTAMP NOT NULL
         );
         """
 
         prepopulate_query = f"""
-        INSERT INTO nodes (node_hostname, node_status, node_last_seen, node_tags)
-        VALUES ('UNASSIGNED', 'UNASSIGNED', '{datetime.now()}', '{{virtual}}')
+        INSERT INTO nodes (node_hostname, node_status, node_last_seen, node_tags, node_num_parallel_jobs)
+        VALUES ('UNASSIGNED', 'UNASSIGNED', '{datetime.now()}', '{{virtual}}', 1)
         """
 
         queries = [create_query, prepopulate_query]
@@ -70,11 +72,28 @@ class Node(BaseModel):
         node_tags_str = "{" + ",".join(self.tags) + "}"
 
         sql_query = f"""
-        INSERT INTO nodes (node_hostname, node_status, node_last_seen, node_tags)
-        VALUES ('{self.hostname}', '{self.status}', '{self.last_seen}', '{node_tags_str}')
-        ON CONFLICT (node_hostname) DO UPDATE
+        INSERT INTO nodes (
+            node_hostname, node_status, node_last_seen,
+            node_tags, node_num_parallel_jobs
+        ) VALUES (
+            '{self.hostname}', '{self.status}', '{self.last_seen}',
+            '{node_tags_str}', {self.num_parallel_jobs}
+        ) ON CONFLICT (node_hostname) DO UPDATE
         SET node_status = '{self.status}', node_last_seen = '{self.last_seen}',
-            node_tags = '{node_tags_str}';
+            node_tags = '{node_tags_str}' , node_num_parallel_jobs = {self.num_parallel_jobs};
         """
 
         return sql_query
+
+    @staticmethod
+    def update_last_seen_query(hostname: str) -> str:
+        """
+        Return the SQL query to update the last seen time of the node.
+        """
+        query = f"""
+        UPDATE nodes
+        SET node_last_seen = '{datetime.now()}'
+        WHERE node_hostname = '{hostname}'
+        """
+
+        return query

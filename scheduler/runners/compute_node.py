@@ -55,10 +55,17 @@ if __name__ == "__main__":
 
     HOSTNAME = cli.get_hostname()
     TAGS: List[str] = ["gpu"]
+    processor_idx = -1
     logger.info(f"Starting compute node @ {HOSTNAME}")
 
     orchestrator.update_node(
         hostname=HOSTNAME, config_file=config_file, status="started", tags=TAGS
+    )
+    orchestrator.update_node_processor(
+        hostname=HOSTNAME,
+        processor_idx=processor_idx,
+        status="starting",
+        config_file=config_file,
     )
     logger.info("Node registered with the scheduler. Starting main loop...")
     while True:
@@ -83,6 +90,7 @@ if __name__ == "__main__":
             job_id=job.job_id,  # type: ignore
             hostname=HOSTNAME,
             config_file=config_file,
+            processor_idx=processor_idx,
         )
 
         if not claimed_sucessfully:
@@ -97,5 +105,5 @@ if __name__ == "__main__":
         )
 
         logger.info(f"Job {job.job_id} completed.")
-    
+
     logger.info("Done!")

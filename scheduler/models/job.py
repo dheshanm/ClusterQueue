@@ -35,6 +35,7 @@ class Job(BaseModel):
     job_last_updated: datetime
     job_submission_time: datetime
     job_assigned_node: Optional[str] = None
+    job_assigned_node_processor: Optional[int] = None
     job_result_metadata: Optional[Dict[str, Any]] = None
     job_metadata: Optional[Dict[str, Any]] = None
 
@@ -59,6 +60,7 @@ class Job(BaseModel):
             job_last_updated TIMESTAMP NOT NULL,
             job_submission_time TIMESTAMP NOT NULL,
             job_assigned_node TEXT NOT NULL REFERENCES nodes(node_hostname),
+            job_assigned_node_processor INT,
             job_result_metadata JSONB,
             job_metadata JSONB
         );
@@ -105,15 +107,22 @@ class Job(BaseModel):
         else:
             job_env_variables = db.sanitize_json(self.job_env_variables)
 
+        if self.job_assigned_node_processor is None:
+            job_assigned_node_processor = "NULL"
+        else:
+            job_assigned_node_processor = self.job_assigned_node_processor
+
         sql_query = f"""
         INSERT INTO jobs (
             job_payload, job_env_variables, job_status,
             job_tags, job_last_updated, job_submission_time,
-            job_assigned_node, job_result_metadata, job_metadata
+            job_assigned_node, job_assigned_node_processor,
+            job_result_metadata, job_metadata
         ) VALUES (
             '{self.job_payload}', '{job_env_variables}', '{self.job_status}',
             '{job_tags}', '{self.job_last_updated}', '{self.job_submission_time}',
-            '{job_assigned_node}', '{job_result_metadata}', '{job_metadata}'
+            '{job_assigned_node}', {job_assigned_node_processor},
+            '{job_result_metadata}', '{job_metadata}'
         );
         """
 
@@ -174,6 +183,7 @@ class Job(BaseModel):
                 job_last_updated=row["job_last_updated"],
                 job_submission_time=row["job_submission_time"],
                 job_assigned_node=row["job_assigned_node"],
+                job_assigned_node_processor=row["job_assigned_node_processor"],
                 job_result_metadata=row["job_result_metadata"],
                 job_metadata=row["job_metadata"],
             )
