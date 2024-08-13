@@ -410,3 +410,25 @@ def stop_node(hostname: str, config_file: Path) -> None:
         silent=True,
         show_commands=False,
     )
+
+
+def submit_job(job: Job, config_file: Path) -> None:
+    """
+    Submits a job to the database.
+
+    Args:
+        job (Job): The job to submit.
+        config_file (str): The path to the configuration file.
+
+    Returns:
+        None
+    """
+
+    query = job.insert_query()
+
+    db.execute_queries(
+        config_file=config_file,
+        queries=[query],
+        silent=True,
+        show_commands=False,
+    )
