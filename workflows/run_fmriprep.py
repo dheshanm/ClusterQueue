@@ -193,7 +193,7 @@ if __name__ == "__main__":
 
     # Link the freesurfer output to a temporary directory to prevent fmriprep from
     # using information from the other sessions
-    fs_session_temp = TEMP_DIR / "fsdir"
+    fs_session_temp = TEMP_DIR / "fsdir" / subject_id / session_id
     fs_session_temp.parent.mkdir(exist_ok=True, parents=True)
 
     logger.info(f"Linking {fs_session_dir} to {fs_session_temp}")
@@ -251,12 +251,10 @@ if __name__ == "__main__":
 --bids-filter-file /filter.json
 """
 
-    stdout_path = (
-        LOGS_DIR / f"{subject_id}_{session_id}_{datetime.now().isoformat()}_stdout.log"
-    )
-    stderr_path = (
-        LOGS_DIR / f"{subject_id}_{session_id}_{datetime.now().isoformat()}_stderr.log"
-    )
+    current_time = datetime.now().isoformat()
+
+    stdout_path = LOGS_DIR / f"{subject_id}_{session_id}_{current_time}_stdout.log"
+    stderr_path = LOGS_DIR / f"{subject_id}_{session_id}_{current_time}_stderr.log"
 
     stdout = open(stdout_path, "w", encoding="utf-8")
     stderr = open(stderr_path, "w", encoding="utf-8")
