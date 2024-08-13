@@ -401,6 +401,9 @@ def stop_node(hostname: str, config_file: Path) -> None:
     queries.append(stop_node_query)
     queries.append(interrupt_jobs_query)
 
+    logger.info(f"Stopping node {hostname}")
+    logger.debug(f"Interrupting jobs on node {hostname}")
+
     db.execute_queries(
         config_file=config_file,
         queries=queries,
