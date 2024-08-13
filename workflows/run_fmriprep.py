@@ -194,14 +194,10 @@ if __name__ == "__main__":
     # Link the freesurfer output to a temporary directory to prevent fmriprep from
     # using information from the other sessions
     fs_session_temp = TEMP_DIR / "fsdir" / subject_id / session_id
-    fs_session_temp.parent.mkdir(exist_ok=True, parents=True)
+    fs_session_temp.mkdir(exist_ok=True, parents=True)
 
-    logger.info(f"Linking {fs_session_dir} to {fs_session_temp}")
-    create_link(
-        source=fs_session_dir,
-        destination=fs_session_temp,
-        softlink=True,
-    )
+    logger.info(f"Copy {fs_session_dir} to {fs_session_temp}")
+    shutil.copytree(fs_session_dir, fs_session_temp, dirs_exist_ok=True)
     fs_subject_dir = fs_session_temp.parent
 
     fmriprep_outdir_root.mkdir(exist_ok=True, parents=True)
