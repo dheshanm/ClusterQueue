@@ -202,6 +202,7 @@ if __name__ == "__main__":
         destination=fs_session_temp,
         softlink=True,
     )
+    fs_subject_dir = fs_session_temp.parent
 
     fmriprep_outdir_root.mkdir(exist_ok=True, parents=True)
 
@@ -233,7 +234,7 @@ if __name__ == "__main__":
 -B {rawdata_dir}:/data:ro \
 -B {work_dir}:/work \
 -B {fmriprep_outdir_root}:/out \
--B {fs_session_temp}:/fsdir \
+-B {fs_subject_dir}:/fsdir \
 -B /data/pnl/soft/pnlpipe3/freesurfer/license.txt:/opt/freesurfer/license.txt \
 -B {fmriprep_outdir_root}/filter.json:/filter.json \
 {SINGULARITY_IMGAGE_PATH} \
@@ -259,7 +260,8 @@ if __name__ == "__main__":
     stdout = open(stdout_path, "w", encoding="utf-8")
     stderr = open(stderr_path, "w", encoding="utf-8")
 
-    logger.debug(f"Logging stdout to {stdout}")
+    logger.debug(f"Logging stdout to {stdout_path}")
+    logger.debug(f"Logging stderr to {stderr_path}")
 
     execute_commands(command, stdout=stdout, stderr=stderr)
 
