@@ -396,6 +396,7 @@ def stop_node(hostname: str, config_file: Path) -> None:
     SET job_status = 'INTERRUPTED',
         job_last_updated = '{datetime.now()}'
     WHERE job_assigned_node = '{hostname}'
+        AND job_status = 'RUNNING'
     """
 
     queries.append(stop_node_query)
