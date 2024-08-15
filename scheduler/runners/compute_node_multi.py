@@ -23,6 +23,7 @@ except ValueError:
 import logging
 from typing import List
 import multiprocessing
+import argparse
 
 from rich.logging import RichHandler
 from pydantic import BaseModel
@@ -47,7 +48,7 @@ logging.basicConfig(**logargs)
 
 # ----------------------------------------------
 
-TAGS: List[str] = ["gpu"]
+TAGS: List[str] = ["cpu"]
 NUM_PARALLEL_JOBS = 4
 
 # ----------------------------------------------
@@ -161,6 +162,24 @@ if __name__ == "__main__":
         config_file=config_file, module_name=MODULE_NAME, logger=logger
     )
 
+    argparser = argparse.ArgumentParser(description="Start the compute node.")
+    argparser.add_argument(
+        "--num_parallel_jobs",
+        type=int,
+        default=NUM_PARALLEL_JOBS,
+        help="The number of parallel jobs to run.",
+    )
+    argparser.add_argument(
+        "--tags",
+        type=str,
+        default="cpu",
+        help="The tags to use for the node.",
+    )
+    args = argparser.parse_args()
+
+    NUM_PARALLEL_JOBS = args.num_parallel_jobs
+    TAGS = args.tags.split(",")
+
     console.rule(f"[bold red]{MODULE_NAME}")
     logger.info(f"Using config file: {config_file}")
 
@@ -188,8 +207,6 @@ if __name__ == "__main__":
             pool.map(processor, params)
         except KeyboardInterrupt:
             logger.info("Exiting...")
-            orchestrator.stop_node(
-                hostname=HOSTNAME, config_file=config_file
-            )
+            orchestrator.stop_node(hostname=HOSTNAME, config_file=config_file)
 
     logger.info("Done!")
