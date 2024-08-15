@@ -109,6 +109,8 @@ def execute_commands(
 
     Args:
         command (str): The command to execute.
+        stdout (IO): The file object to write stdout to.
+        stderr (IO): The file object to write stderr to.
         on_fail (Callable, optional): The function to call if the command fails.
             Defaults to lambda: sys.exit(1).
 
@@ -126,6 +128,10 @@ def execute_commands(
         shell=True,
         check=False,
     )
+
+    # log outputs to sys.stdout and sys.stderr
+    sys.stdout.write(result.stdout.decode("utf-8"))
+    sys.stderr.write(result.stderr.decode("utf-8"))
 
     if result.returncode != 0:
         logger.error("=====================================")
@@ -259,20 +265,24 @@ if __name__ == "__main__":
     logger.debug(f"Logging stdout to {stdout_path}")
     logger.debug(f"Logging stderr to {stderr_path}")
 
+    # # log to stdout and stderr
+    # stdout = sys.stdout
+    # stderr = sys.stderr
     execute_commands(command, stdout=stdout, stderr=stderr)
 
     stdout.close()
     stderr.close()
+    # copy logs to the output directory
+    shutil.copy(stdout_path, fmriprep_outdir_root)
+    shutil.copy(stderr_path, fmriprep_outdir_root)
 
     logger.info(f"Finished fmriprep for {subject_id} {session_id}")
 
     output_dir = OUT_ROOT / subject_id / session_id
-    output_dir.mkdir(exist_ok=True, parents=True)
     logger.info(f"Moving assets from {fmriprep_outdir_root} to {output_dir}")
-    shutil.move(fmriprep_outdir_root, output_dir)
-    # copy logs to the output directory
-    shutil.copy(stdout_path, output_dir)
-    shutil.copy(stderr_path, output_dir)
+    output_dir.parent.mkdir(exist_ok=True, parents=True)
+
+    shutil.copytree(fmriprep_outdir_root, output_dir)
 
     logger.info(f"Removing temporary directory {TEMP_DIR}")
     shutil.rmtree(TEMP_DIR)
