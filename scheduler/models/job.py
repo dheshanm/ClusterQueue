@@ -157,7 +157,7 @@ class Job(BaseModel):
         else:
             select_query = f"""
             WITH compatible_tags AS (
-            SELECT ARRAY[{','.join([f"'{tag}'" for tag in tags])}] AS tags
+                SELECT ARRAY[{','.join([f"'{tag}'" for tag in tags])}] AS tags
             )
             SELECT *
             FROM public.jobs, compatible_tags
@@ -166,7 +166,7 @@ class Job(BaseModel):
                 job_tags IS NULL
                 OR (job_tags && tags AND job_tags <@ tags)
             )
-            ORDER BY job_submission_time
+            ORDER BY RANDOM()
             LIMIT {limit};
         """
 
