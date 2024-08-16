@@ -130,8 +130,10 @@ def execute_commands(
     )
 
     # log outputs to sys.stdout and sys.stderr
-    sys.stdout.write(result.stdout.decode("utf-8"))
-    sys.stderr.write(result.stderr.decode("utf-8"))
+    with open(stdout.name, "r", encoding="utf-8") as stdout_file:
+        sys.stdout.write(stdout_file.read())
+    with open(stderr.name, "r", encoding="utf-8") as stderr_file:
+        sys.stderr.write(stderr_file.read())
 
     if result.returncode != 0:
         logger.error("=====================================")
