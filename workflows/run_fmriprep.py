@@ -77,24 +77,34 @@ def create_link(source: Path, destination: Path, softlink: bool = True) -> None:
 def remove_DataSetTrailingPadding_from_json_files(
     rawdata_dir: Path, subject_id: str, session_id: str
 ) -> None:
-    """Remove DataSetTrailingPadding from the existing json files"""
+    """
+    Remove DataSetTrailingPadding from the existing json files
+
+    Args:
+        rawdata_dir (Path): The rawdata directory.
+        subject_id (str): The subject ID.
+        session_id (str): The session ID.
+
+    Returns:
+        None
+    """
     session_path = rawdata_dir / subject_id / session_id
     json_files = list(Path(session_path).glob("*/*json"))
     for json_file in json_files:
-        with open(json_file, "r") as fp:
+        with open(json_file, "r", encoding="utf-8") as fp:
             data = json.load(fp)
         if "global" in data.keys():
             # anat
             if "DataSetTrailingPadding" in data["global"]["slices"].keys():
                 data["global"]["slices"]["DataSetTrailingPadding"] = "removed"
-                with open(json_file, "w") as fp:
+                with open(json_file, "w", encoding="utf-8") as fp:
                     json.dump(data, fp, indent=1)
 
         if "time" in data.keys():
             # fmri
             if "DataSetTrailingPadding" in data["time"]["samples"].keys():
                 data["time"]["samples"]["DataSetTrailingPadding"] = "removed"
-                with open(json_file, "w") as fp:
+                with open(json_file, "w", encoding="utf-8") as fp:
                     json.dump(data, fp, indent=1)
 
 
