@@ -187,7 +187,11 @@ if __name__ == "__main__":
     logger.info(f"Starting compute node @ {HOSTNAME}")
 
     orchestrator.update_node(
-        hostname=HOSTNAME, config_file=config_file, status="started", tags=TAGS
+        hostname=HOSTNAME,
+        config_file=config_file,
+        status="started",
+        tags=TAGS,
+        num_parallel_jobs=NUM_PARALLEL_JOBS,
     )
     logger.info("Node registered with the scheduler. Starting main loop...")
 

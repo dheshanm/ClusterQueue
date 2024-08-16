@@ -91,7 +91,13 @@ def update_node_last_seen(hostname: str, config_file: Path) -> None:
     )
 
 
-def update_node(hostname: str, config_file: Path, status: str, tags: List[str]) -> None:
+def update_node(
+    hostname: str,
+    config_file: Path,
+    status: str,
+    tags: List[str],
+    num_parallel_jobs: int,
+) -> None:
     """
     Registers the compute node with the scheduler.
 
@@ -99,6 +105,8 @@ def update_node(hostname: str, config_file: Path, status: str, tags: List[str]) 
         hostname (str): The hostname of the compute node.
         config_file (str): The path to the configuration file.
         status (str): The status of the compute node.
+        tags (List[str]): The tags of the compute node.
+        num_parallel_jobs (int): The number of parallel jobs the compute node can handle.
 
     Returns:
         None
@@ -109,6 +117,7 @@ def update_node(hostname: str, config_file: Path, status: str, tags: List[str]) 
         status=status,
         last_seen=datetime.now(),
         tags=tags,
+        num_parallel_jobs=num_parallel_jobs,
     )
 
     query = node.insert_query()
