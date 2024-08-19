@@ -150,6 +150,7 @@ class Job(BaseModel):
             SELECT *
             FROM public.jobs
             WHERE job_status = 'PENDING'
+                OR job_status = 'INTERRUPTED'
             AND job_tags IS NULL
             ORDER BY RANDOM()
             LIMIT {limit};
@@ -162,6 +163,7 @@ class Job(BaseModel):
             SELECT *
             FROM public.jobs, compatible_tags
             WHERE job_status = 'PENDING'
+                OR job_status = 'INTERRUPTED'
             AND (
                 job_tags IS NULL
                 OR (job_tags && tags AND job_tags <@ tags)
