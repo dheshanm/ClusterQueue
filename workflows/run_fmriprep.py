@@ -112,6 +112,7 @@ def execute_commands(
     command: str,
     stdout: IO,
     stderr: IO,
+    timeout: str = "24h",
     on_fail: Callable = lambda: sys.exit(1),
 ) -> subprocess.CompletedProcess:
     """
@@ -128,6 +129,10 @@ def execute_commands(
         subprocess.CompletedProcess: The result of the command execution.
 
     """
+
+    # Add timeout to the command
+    command = f"timeout {timeout} {command}"
+
     logger.debug("Executing command:")
     logger.debug(command)
 
