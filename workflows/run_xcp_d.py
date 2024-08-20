@@ -156,6 +156,16 @@ if __name__ == "__main__":
 --nprocs 8 --omp-nthreads 8 \
 --input-type fmriprep \
 --cifti \
+--mode abcd \
+--motion-filter-type none \
+--dummy-scans auto \
+--fd-thresh 0.3 \
+--lower-bpf 0.01 \
+--upper-bpf 0.08 \
+--nuisance-regressors gsr_only \
+--create-matrices all \
+--atlases Glasser Gordon 4S456Parcels HCP Tian \
+--smoothing 0 \
 --fs-license-file /opt/freesurfer/license.txt
 """
 
