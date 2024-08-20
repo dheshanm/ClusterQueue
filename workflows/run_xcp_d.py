@@ -155,7 +155,6 @@ if __name__ == "__main__":
 -w /work --participant-label {subject_id} \
 --nprocs 8 --omp-nthreads 8 \
 --input-type fmriprep \
---cifti \
 --mode abcd \
 --motion-filter-type none \
 --dummy-scans auto \
