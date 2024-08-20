@@ -135,23 +135,22 @@ if __name__ == "__main__":
     work_dir = TEMP_DIR / "work"
     work_dir.mkdir(exist_ok=True, parents=True)
 
-    rawdata_dir = MRI_ROOT / "rawdata"
-    # fmriprep_outdir_root = MRI_ROOT / "derivatives" / "fmriprep"
     xcp_d_session_output_dir = TEMP_DIR / "output"
-
     xcp_d_session_output_dir.mkdir(exist_ok=True, parents=True)
 
     fmriprep_input_dir = FMRIPREP_OUTPUT_DIR / subject_id / session_id
+    fmriprep_input_dir_copy = TEMP_DIR / "input" / "fmriprep"
+    shutil.copytree(fmriprep_input_dir, fmriprep_input_dir_copy)
 
     command = f"""{SINGULARITY_EXEC} run --cleanenv \
--B {fmriprep_input_dir}:/fmriprep \
+-B {fmriprep_input_dir_copy}:/fmriprep \
 -B {xcp_d_session_output_dir}:/out \
 -B /data/pnl/soft/pnlpipe3/freesurfer/license.txt:/opt/freesurfer/license.txt \
 -B {work_dir}:/work \
 {SINGULARITY_IMGAGE_PATH} \
 /fmriprep /out participant \
 -w /work --participant-label {subject_id} \
---nprocs 8 --mem 32G --omp-nthreads 8 \
+--nprocs 8 --omp-nthreads 8 \
 --input-type fmriprep \
 --cifti \
 --fs-license-file /opt/freesurfer/license.txt
