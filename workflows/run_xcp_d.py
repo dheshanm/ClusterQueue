@@ -140,6 +140,9 @@ if __name__ == "__main__":
 
     fmriprep_input_dir = FMRIPREP_OUTPUT_DIR / subject_id / session_id
     fmriprep_input_dir_copy = TEMP_DIR / "input" / "fmriprep"
+    logger.info(
+        f"Copying fmriprep output from {fmriprep_input_dir} to {fmriprep_input_dir_copy}"
+    )
     shutil.copytree(fmriprep_input_dir, fmriprep_input_dir_copy)
 
     command = f"""{SINGULARITY_EXEC} run --cleanenv \
