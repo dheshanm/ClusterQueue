@@ -145,6 +145,8 @@ if __name__ == "__main__":
     )
     shutil.copytree(fmriprep_input_dir, fmriprep_input_dir_copy)
 
+    subject_id_raw = subject_id.replace("sub-", "")
+
     command = f"""{SINGULARITY_EXEC} run --cleanenv \
 -B {fmriprep_input_dir_copy}:/fmriprep \
 -B {xcp_d_session_output_dir}:/out \
@@ -152,7 +154,7 @@ if __name__ == "__main__":
 -B {work_dir}:/work \
 {SINGULARITY_IMGAGE_PATH} \
 /fmriprep /out participant \
--w /work --participant-label {subject_id} \
+-w /work --participant-label {subject_id_raw} \
 --nprocs 8 --omp-nthreads 8 \
 --input-type fmriprep \
 --mode abcd \
