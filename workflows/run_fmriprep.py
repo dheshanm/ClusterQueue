@@ -267,7 +267,6 @@ if __name__ == "__main__":
 --skip_bids_validation \
 --notrack \
 --cifti-output \
---level minimal \
 --bids-filter-file /filter.json
 """
 
