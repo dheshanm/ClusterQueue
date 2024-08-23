@@ -59,7 +59,11 @@ if __name__ == "__main__":
     logger.info(f"Starting compute node @ {HOSTNAME}")
 
     orchestrator.update_node(
-        hostname=HOSTNAME, config_file=config_file, status="started", tags=TAGS
+        hostname=HOSTNAME,
+        config_file=config_file,
+        status="started",
+        tags=TAGS,
+        num_parallel_jobs=1,
     )
     orchestrator.update_node_processor(
         hostname=HOSTNAME,
@@ -75,11 +79,19 @@ if __name__ == "__main__":
         if available_jobs is None:
             logger.info("No jobs available.")
             orchestrator.update_node(
-                hostname=HOSTNAME, config_file=config_file, status="snoozing", tags=TAGS
+                hostname=HOSTNAME,
+                config_file=config_file,
+                status="snoozing",
+                tags=TAGS,
+                num_parallel_jobs=1,
             )
             orchestrator.snooze(config_file=config_file)
             orchestrator.update_node(
-                hostname=HOSTNAME, config_file=config_file, status="idle", tags=TAGS
+                hostname=HOSTNAME,
+                config_file=config_file,
+                status="idle",
+                tags=TAGS,
+                num_parallel_jobs=1,
             )
             continue
 
