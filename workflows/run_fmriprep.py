@@ -36,7 +36,13 @@ SINGULARITY_FALLBACK_PATH = (
 )
 
 # local
-TEMP_ROOT = Path("/tmp")
+# check if '~/scratch' exists
+if Path("~/scratch").expanduser().exists():
+    TEMP_ROOT = Path("~/scratch")
+elif Path("/tmp").exists():
+    TEMP_ROOT = Path("/tmp")
+else:
+    raise FileNotFoundError("No temporary directory found")
 
 
 def create_link(source: Path, destination: Path, softlink: bool = True) -> None:
@@ -204,6 +210,7 @@ if __name__ == "__main__":
             sys.exit(404)
 
     logger.info(f"Singularity executable: {SINGULARITY_EXEC}")
+    logger.info(f"Temporary directory: {TEMP_DIR}")
 
     work_dir = TEMP_DIR / "work"
     work_dir.mkdir(exist_ok=True, parents=True)
@@ -284,7 +291,23 @@ if __name__ == "__main__":
     # # log to stdout and stderr
     # stdout = sys.stdout
     # stderr = sys.stderr
-    execute_commands(command, stdout=stdout, stderr=stderr)
+
+    def on_fail():
+        """
+        Function to call when the command fails.
+
+        Can be used to clean up temporary directories.
+        """
+        logger.error(f"Failed to run fmriprep for {subject_id} {session_id}")
+
+        # remove temporary directory
+        # logger.info(f"Removing temporary directory {TEMP_DIR}")
+        # shutil.rmtree(TEMP_DIR)
+
+        logger.info("Exiting with status 1")
+        sys.exit(1)
+
+    execute_commands(command, stdout=stdout, stderr=stderr, on_fail=on_fail)
 
     stdout.close()
     stderr.close()
