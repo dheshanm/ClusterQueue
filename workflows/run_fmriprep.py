@@ -38,7 +38,7 @@ SINGULARITY_FALLBACK_PATH = (
 # local
 # check if '~/scratch' exists
 if Path("~/scratch").expanduser().exists():
-    TEMP_ROOT = Path("~/scratch")
+    TEMP_ROOT = Path("~/scratch").expanduser()
 elif Path("/tmp").exists():
     TEMP_ROOT = Path("/tmp")
 else:
