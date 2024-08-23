@@ -211,7 +211,8 @@ def claim_job(
         job_assigned_node_processor = {processor_idx},
         job_status = 'CLAIMED',
         job_last_updated = '{datetime.now()}'
-    WHERE job_id = {job_id} AND job_status = 'PENDING'
+    WHERE job_id = {job_id}
+        AND job_status IN ('PENDING', 'INTERRUPTED')
     """
 
     query = db.execute_queries(
