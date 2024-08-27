@@ -21,7 +21,7 @@ logargs = {
 }
 logging.basicConfig(**logargs)
 
-SINGULARITY_IMGAGE_PATH = "/data/predict1/home/kcho/singularity_images/xcp_d-0.8.0.simg"
+SINGULARITY_IMGAGE_PATH = "/data/predict1/home/kcho/singularity_images/xcp_d-0.8.3.simg"
 LOGS_DIR = Path("/data/predict1/home/dm1447/xcp_d/logs")
 MRI_ROOT = Path("/data/predict1/data_from_nda/MRI_ROOT")
 FMRIPREP_OUTPUT_DIR = MRI_ROOT / "derivatives" / "fmriprep_24_0_0"
