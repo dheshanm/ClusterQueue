@@ -32,7 +32,13 @@ SINGULARITY_FALLBACK_PATH = (
 )
 
 # local
-TEMP_ROOT = Path("/tmp")
+# check if '~/scratch' exists
+if Path("~/scratch").expanduser().exists():
+    TEMP_ROOT = Path("~/scratch").expanduser()
+elif Path("/tmp").exists():
+    TEMP_ROOT = Path("/tmp")
+else:
+    raise FileNotFoundError("No temporary directory found")
 
 
 def execute_commands(
