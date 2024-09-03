@@ -5,16 +5,22 @@ Run fmriprep on the a single subject/session pair.
 Reuses FS output directory from the previous run.
 """
 
+import argparse
 import json
 import logging
+import random
 import shutil
 import subprocess
 import sys
-import random
+from datetime import datetime
 from pathlib import Path
 from typing import IO, Callable
-from datetime import datetime
-import argparse
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.append(str(REPO_ROOT))
+
+from scheduler import orchestrator
+from scheduler.models.job import Job
 
 logger = logging.getLogger("fmriprep")
 logargs = {
@@ -29,7 +35,7 @@ SINGULARITY_IMGAGE_PATH = (
 )
 LOGS_DIR = Path("/data/predict1/home/dm1447/fmriprep/logs")
 MRI_ROOT = Path("/data/predict1/data_from_nda/MRI_ROOT")
-OUT_ROOT = Path("/data/predict1/data_from_nda/MRI_ROOT/derivatives/fmriprep_24_0_0")
+OUT_ROOT = Path("/data/predict2/MRI_ROOT/derivatives/fmriprep_24_0_0")
 
 SINGULARITY_FALLBACK_PATH = (
     "/apps/released/gcc-toolchain/gcc-4.x/singularity/singularity-3.7.0/bin/singularity"
@@ -187,6 +193,12 @@ if __name__ == "__main__":
     )
     parser.add_argument("subject_id", type=str, help="The subject ID. e.g. sub-XXXXXXX")
     parser.add_argument("session_id", type=str, help="The session ID. e.g. ses-XXXXXXX")
+    parser.add_argument(
+        "-c",
+        "--config-file",
+        type=str,
+        help="The configuration file to use to queue jobs",
+    )
 
     args = parser.parse_args()
 
@@ -194,6 +206,8 @@ if __name__ == "__main__":
     # session_id = "ses-202404051"
     subject_id: str = args.subject_id
     session_id: str = args.session_id
+
+    config_file: Path = Path(args.config_file)
 
     logger.info(f"Running fmriprep for {subject_id} {session_id}")
 
@@ -327,4 +341,13 @@ if __name__ == "__main__":
     shutil.rmtree(TEMP_DIR)
 
     logger.info(f"{subject_id} {session_id} finished")
+
+    # Queue XCP-D job
+    xcp_d_job = Job(
+        job_payload=f"{REPO_ROOT}/workflows/run_xcp_d.py {subject_id} {session_id}",
+        job_status="PENDING",
+        job_last_updated=datetime.now(),
+        job_submission_time=datetime.now(),
+    )
+    orchestrator.submit_job(job=xcp_d_job, config_file=args.config_file)
     sys.exit(0)

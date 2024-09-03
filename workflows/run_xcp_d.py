@@ -24,8 +24,8 @@ logging.basicConfig(**logargs)
 SINGULARITY_IMGAGE_PATH = "/data/predict1/home/kcho/singularity_images/xcp_d-0.8.3.simg"
 LOGS_DIR = Path("/data/predict1/home/dm1447/xcp_d/logs")
 MRI_ROOT = Path("/data/predict1/data_from_nda/MRI_ROOT")
-FMRIPREP_OUTPUT_DIR = MRI_ROOT / "derivatives" / "fmriprep_24_0_0"
-OUT_ROOT = Path("/data/predict1/home/dm1447/xcp_d/outputs")
+FMRIPREP_OUTPUT_DIR = Path("/data/predict2/MRI_ROOT/derivatives/fmriprep_24_0_0")
+OUT_ROOT = Path("/data/predict2/MRI_ROOT/derivatives/xcp_d_0_8_3")
 
 SINGULARITY_FALLBACK_PATH = (
     "/apps/released/gcc-toolchain/gcc-4.x/singularity/singularity-3.7.0/bin/singularity"
