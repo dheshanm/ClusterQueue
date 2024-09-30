@@ -249,26 +249,6 @@ if __name__ == "__main__":
     remove_DataSetTrailingPadding_from_json_files(rawdata_dir, subject_id, session_id)
 
     session_id_digits = session_id.split("-")[1]
-    filter_dict = {
-        "t1w": {
-            "datatype": "anat",
-            "session": session_id_digits,
-            "suffix": "T1w",
-        },
-        "t2w": {
-            "datatype": "anat",
-            "session": session_id_digits,
-            "suffix": "T2w",
-        },
-        "bold": {
-            "datatype": "func",
-            "session": session_id_digits,
-            "suffix": "bold",
-        },
-    }
-
-    with open(fmriprep_outdir_root / "filter.json", "w", encoding="utf-8") as fp:
-        json.dump(filter_dict, fp, indent=4)
 
     command = f"""{SINGULARITY_EXEC} run -e \
 -B {rawdata_dir}:/data:ro \
@@ -276,7 +256,6 @@ if __name__ == "__main__":
 -B {fmriprep_outdir_root}:/out \
 -B {fs_subject_dir}:/fsdir \
 -B /data/pnl/soft/pnlpipe3/freesurfer/license.txt:/opt/freesurfer/license.txt \
--B {fmriprep_outdir_root}/filter.json:/filter.json \
 {SINGULARITY_IMGAGE_PATH} \
 /data /out participant \
 -w /work --participant-label {subject_id} \
