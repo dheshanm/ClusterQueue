@@ -266,8 +266,7 @@ if __name__ == "__main__":
 --verbose \
 --skip_bids_validation \
 --notrack \
---cifti-output \
---bids-filter-file /filter.json
+--cifti-output
 """
 
     current_time = datetime.now().isoformat()
@@ -325,6 +324,7 @@ if __name__ == "__main__":
     xcp_d_job = Job(
         job_payload=f"{REPO_ROOT}/workflows/run_xcp_d.py {subject_id} {session_id}",
         job_status="PENDING",
+        job_tags=["xcp-d"],
         job_last_updated=datetime.now(),
         job_submission_time=datetime.now(),
     )
