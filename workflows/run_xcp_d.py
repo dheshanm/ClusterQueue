@@ -123,6 +123,11 @@ if __name__ == "__main__":
     session_id: str = args.session_id
 
     logger.info(f"Running fmriprep for {subject_id} {session_id}")
+    output_dir = OUT_ROOT / subject_id / session_id
+
+    if output_dir.exists():
+        logger.info(f"Output directory {output_dir} already exists. Skipping.")
+        sys.exit(2)
 
     TEMP_DIR = TEMP_ROOT / "XCP_D"
     RANDOM_STR = "".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=8))
@@ -200,7 +205,6 @@ if __name__ == "__main__":
 
     logger.info(f"Finished fmriprep for {subject_id} {session_id}")
 
-    output_dir = OUT_ROOT / subject_id / session_id
     logger.info(f"Moving assets from {xcp_d_session_output_dir} to {output_dir}")
     output_dir.parent.mkdir(exist_ok=True, parents=True)
 

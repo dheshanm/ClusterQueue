@@ -210,6 +210,12 @@ if __name__ == "__main__":
     config_file: Path = Path(args.config_file)
 
     logger.info(f"Running fmriprep for {subject_id} {session_id}")
+    output_dir = OUT_ROOT / subject_id / session_id
+
+    # Check if the output directory already exists
+    if output_dir.exists():
+        logger.info(f"Output directory {output_dir} already exists. Skipping.")
+        sys.exit(2)
 
     TEMP_DIR = TEMP_ROOT / "fmriprep"
     RANDOM_STR = "".join(random.choices("abcdefghijklmnopqrstuvwxyz", k=6))
@@ -293,8 +299,8 @@ if __name__ == "__main__":
         logger.error(f"Failed to run fmriprep for {subject_id} {session_id}")
 
         # remove temporary directory
-        # logger.info(f"Removing temporary directory {TEMP_DIR}")
-        # shutil.rmtree(TEMP_DIR)
+        logger.info(f"Removing temporary directory {TEMP_DIR}")
+        shutil.rmtree(TEMP_DIR)
 
         logger.info("Exiting with status 1")
         sys.exit(1)
@@ -309,7 +315,6 @@ if __name__ == "__main__":
 
     logger.info(f"Finished fmriprep for {subject_id} {session_id}")
 
-    output_dir = OUT_ROOT / subject_id / session_id
     logger.info(f"Moving assets from {fmriprep_outdir_root} to {output_dir}")
     output_dir.parent.mkdir(exist_ok=True, parents=True)
 
