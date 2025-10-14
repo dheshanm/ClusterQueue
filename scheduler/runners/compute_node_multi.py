@@ -138,7 +138,7 @@ def processor(
                 job=job,
                 config_file=config_file,
             )
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             logger.exception(f"Error handling job {job.job_id}: {e}")
             orchestrator.update_job_status(
                 job_id=job.job_id,  # type: ignore
