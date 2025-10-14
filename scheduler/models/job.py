@@ -8,7 +8,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from scheduler.helpers import db
+from ..helpers import db
 
 
 class Job(BaseModel):
