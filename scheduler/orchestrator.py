@@ -308,7 +308,7 @@ def handle_job(config_file: Path, job: Job) -> None:
         job_metadata = {}
 
     orchestrator_params = config(config_file, section="orchestration")
-    logs_root = Path(orchestrator_params["job_logs_root"])
+    logs_root = Path(orchestrator_params["job_logs_root"]).resolve()
 
     log_stdout = logs_root / f"job_{job.job_id}_stdout.log"
     log_stderr = logs_root / f"job_{job.job_id}_stderr.log"
@@ -323,6 +323,10 @@ def handle_job(config_file: Path, job: Job) -> None:
         f.write(f"Job Tags: {job.job_tags}\n")
         f.write(f"Job Submission Time: {job.job_submission_time}\n")
         f.write(f"Job Started at: {start_timestamp}\n")
+        if job.job_env_variables is not None:
+            f.write("Job Environment Variables:\n")
+            for key, value in job.job_env_variables.items():
+                f.write(f"  {key}={value}\n")
         f.write(f"Job Metadata: {job_metadata}\n")
         f.write("+" * 80)
         f.write("\n")
